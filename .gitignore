@@ -18,6 +18,8 @@ ExportedObj/
 *.booproj
 *.svd
 
+# Visual Studio 2015/2017 cache/options directory
+.vs/
 
 # Unity3D generated meta files
 *.pidb.meta
