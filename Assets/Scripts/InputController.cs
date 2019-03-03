@@ -8,6 +8,7 @@ using UnityEngine;
 public class InputController : MonoBehaviour
 {
     protected const int bitBufferCount = 2;
+
     public class InputInfo
     {
         public List<BitArray> controllerBits = new List<BitArray>(bitBufferCount);
@@ -51,9 +52,12 @@ public class InputController : MonoBehaviour
         {
             var currentBuffer = GetCurrentBufferIndex();
             controllerBits[currentBuffer].Set(0, Input.GetButtonDown("Fire1"));
+            //RStick = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+            RStick = new Vector2(Input.GetAxis("CamX"), Input.GetAxis("CamY"));
+            LStick = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
         }
     };
-
+    
 
     /// <summary>
     /// ビット更新後のビットを使った処理呼び出し
