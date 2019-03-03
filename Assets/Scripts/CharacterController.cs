@@ -7,6 +7,7 @@ using UnityEngine;
 /// </summary>
 [RequireComponent(typeof(Animator))]
 [RequireComponent(typeof(InputController))]
+[RequireComponent(typeof(Rigidbody))]
 public class CharacterController : MonoBehaviour
 {
     [Tooltip("移動速度(m/sec)")]
@@ -16,14 +17,22 @@ public class CharacterController : MonoBehaviour
     public Camera                       camera = null;
 
     protected Vector3                   moveVec = Vector3.zero;
+    protected Vector3                   inputVelocity = Vector3.zero;
     protected Animator                  animator = null;
     protected PlayerCameraController    camControl = null;
+    protected Rigidbody                 rigidBody = null;
 
     // Start is called before the first frame update
     void Start()
     {
         animator = GetComponent<Animator>();
         camControl = camera.GetComponent<PlayerCameraController>();
+        rigidBody  = GetComponent<Rigidbody>();
+        if(rigidBody)
+        {
+            rigidBody.velocity = Vector3.zero;
+        }
+
         var inputController = GetComponent<InputController>();
         if(inputController)
         {
@@ -39,14 +48,25 @@ public class CharacterController : MonoBehaviour
             inputController.UnRegisterDelegateWithControllerInfo(UpdateFromInputController);
         }
     }
-    
+
+    private void FixedUpdate()
+    {
+        if (moveVec.magnitude > 0.0f)
+        {
+            rigidBody.velocity = new Vector3(inputVelocity.x, rigidBody.velocity.y, inputVelocity.z);
+        }
+        if (rigidBody.velocity.y > 0.0f)
+        {
+            Debug.Log(rigidBody.velocity.y);
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {
         if (moveVec.magnitude > 0.0f) {
-            var velocity = camControl.camTrans.hRotation * moveVec;
-            this.transform.rotation = Quaternion.LookRotation(velocity);
-            this.transform.Translate(velocity, Space.World);
+            inputVelocity = camControl.camTrans.hRotation * moveVec;
+            this.transform.rotation = Quaternion.LookRotation(inputVelocity);
         }
     }
 
@@ -59,6 +79,6 @@ public class CharacterController : MonoBehaviour
         }
 
         var inputVec = new Vector3(inputInfo.LStick.x, 0.0f, inputInfo.LStick.y);
-        moveVec = inputVec * (movementSpeed * Time.deltaTime);
+        moveVec = inputVec * movementSpeed;
     }
 }
