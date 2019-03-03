@@ -8,13 +8,12 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 [RequireComponent(typeof(InputController))]
 [RequireComponent(typeof(Rigidbody))]
-public class CharacterController : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
     [Tooltip("移動速度(m/sec)")]
     public float movementSpeed = 5.0f;
 
     public float rotateSpeed = 0.01f;
-    public Camera                       camera = null;
 
     protected Vector3                   moveVec = Vector3.zero;
     protected Vector3                   inputVelocity = Vector3.zero;
@@ -25,7 +24,7 @@ public class CharacterController : MonoBehaviour
     void Start()
     {
         animator = GetComponent<Animator>();
-        camControl = camera.GetComponent<PlayerCameraController>();
+        camControl = Camera.main.GetComponent<PlayerCameraController>();
         rigidBody  = GetComponent<Rigidbody>();
         if(rigidBody)
         {
