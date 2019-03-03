@@ -13,7 +13,7 @@ public class PlayerController : MonoBehaviour
     [Tooltip("移動速度(m/sec)")]
     public float movementSpeed = 5.0f;
 
-    public float rotateSpeed = 0.01f;
+    public float rotateSpeed = 10.0f;
 
     protected Vector3                   moveVec = Vector3.zero;
     protected Vector3                   inputVelocity = Vector3.zero;
@@ -53,15 +53,6 @@ public class PlayerController : MonoBehaviour
         {
             rigidBody.velocity = new Vector3(inputVelocity.x, rigidBody.velocity.y, inputVelocity.z);
         }
-        else
-        {
-            rigidBody.velocity = new Vector3(0.0f, rigidBody.velocity.y, 0.0f);
-        }
-
-        if (rigidBody.velocity.y > 0.0f)
-        {
-            Debug.Log(rigidBody.velocity.y);
-        }
     }
 
     // Update is called once per frame
@@ -72,7 +63,7 @@ public class PlayerController : MonoBehaviour
             // 今の回転と目標とする回転までを補完
             this.transform.rotation = Quaternion.Slerp(this.transform.rotation,
                                                          Quaternion.LookRotation(inputVelocity),
-                                                         rotateSpeed);
+                                                         rotateSpeed * Time.deltaTime);
         }
     }
 

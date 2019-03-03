@@ -10,15 +10,15 @@ public class PlayerCameraController : MonoBehaviour
 {
     public class CameraTransform
     {
-        public Vector3 eulerAngle;
+        public Vector3 addEulerAngle;
         public Quaternion vRotation;
         public Quaternion hRotation;
 
         public CameraTransform(Transform transform)
         {
-            eulerAngle = transform.rotation.eulerAngles;
-            vRotation = Quaternion.Euler(eulerAngle.x, 0.0f, 0.0f);
-            hRotation = Quaternion.Euler(0.0f, eulerAngle.y, 0.0f);
+            addEulerAngle = transform.rotation.eulerAngles;
+            vRotation = Quaternion.Euler(addEulerAngle.x, 0.0f, 0.0f);
+            hRotation = Quaternion.Euler(0.0f, addEulerAngle.y, 0.0f);
         }
 
     };
@@ -31,6 +31,8 @@ public class PlayerCameraController : MonoBehaviour
     [Tooltip("注視点からの距離")]
     public float           length = 2.0f;
 
+    protected Vector3      currentForcusPos = Vector3.zero;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -41,6 +43,7 @@ public class PlayerCameraController : MonoBehaviour
         }
 
         camTrans = new CameraTransform(this.transform);
+        currentForcusPos = forcusTrans.position + Vector3.up;
     }
 
     void OnDestroy()
@@ -52,33 +55,51 @@ public class PlayerCameraController : MonoBehaviour
         }
     }
 
-    Vector3 CalclateTargetPos(Vector3 forcusPos)
+    Vector3 CalclateTargetPos(Vector3 forcusPos, float minLength)
     {
+        var targetPos = this.transform.position;
+        var adjustLength = Vector3.Magnitude(forcusPos - this.transform.position);
+        if(length < adjustLength)
+        {
+            adjustLength = length;
+        }
+        adjustLength = adjustLength < minLength ? minLength : adjustLength;
         // プレイヤーの位置からカメラの位置を逆算
-        var targetPos = forcusPos + (this.transform.rotation * Vector3.back) * length;
+        targetPos = forcusPos + (this.transform.rotation * Vector3.back) * adjustLength;
         return targetPos;
     }
 
     // Update is called once per frame
     void LateUpdate()
     {
-        camTrans.hRotation = Quaternion.Euler(0.0f,                  camTrans.eulerAngle.y, 0.0f);
-        camTrans.vRotation = Quaternion.Euler(camTrans.eulerAngle.x, 0.0f,                  0.0f);
+        camTrans.hRotation *= Quaternion.Euler(0.0f,                  camTrans.addEulerAngle.y, 0.0f);
+        camTrans.vRotation *= Quaternion.Euler(camTrans.addEulerAngle.x, 0.0f,                  0.0f);
 
-        this.transform.rotation = camTrans.hRotation * camTrans.vRotation;
+        // 注視点 + Y軸1m
         var forcusPos = forcusTrans.position + Vector3.up;
-        this.transform.position = CalclateTargetPos(forcusPos);
+        var targetVec = forcusPos - this.transform.position;
+        if (camTrans.addEulerAngle.magnitude > 0.0f) {
+            this.transform.rotation = camTrans.hRotation * camTrans.vRotation;
+        }
+        else
+        {
+            // ターゲット方向への回転角度を求める
+            this.transform.rotation = Quaternion.LookRotation(targetVec.normalized);
+            var euler = this.transform.rotation.eulerAngles;
+            camTrans.hRotation = Quaternion.Euler(0.0f, euler.y, 0.0f);
+            camTrans.vRotation = Quaternion.Euler(euler.x, 0.0f, 0.0f);
+        }
+        
+        currentForcusPos = forcusPos;
+        var targetPos = CalclateTargetPos(currentForcusPos, 1.0f);
+
+        this.transform.position = targetPos;
     }
 
     void UpdateFromInputController(InputController.InputInfo inputInfo)
     {
         var factor = 100.0f;
-        if (inputInfo.RStick.magnitude > 0.0f)
-        {
-            camTrans.eulerAngle.y += inputInfo.RStick.x * factor * Time.deltaTime;
-            camTrans.eulerAngle.x += inputInfo.RStick.y * factor * Time.deltaTime;
-        }
-        camTrans.eulerAngle.x = Mathf.Repeat(camTrans.eulerAngle.x + 360.0f, 360.0f);
-        camTrans.eulerAngle.y = Mathf.Repeat(camTrans.eulerAngle.y + 360.0f, 360.0f);
+        camTrans.addEulerAngle.y = inputInfo.RStick.x * factor * Time.deltaTime;
+        camTrans.addEulerAngle.x = inputInfo.RStick.y * factor * Time.deltaTime;
     }
 }
