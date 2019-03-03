@@ -78,8 +78,7 @@ public class PlayerCameraController : MonoBehaviour
             camTrans.eulerAngle.y += inputInfo.RStick.x * factor * Time.deltaTime;
             camTrans.eulerAngle.x += inputInfo.RStick.y * factor * Time.deltaTime;
         }
-
-        //camTrans.eulerAngle.x = Mathf.Repeat(camTrans.eulerAngle.x, 360.0f);
-        //camTrans.eulerAngle.y = Mathf.Repeat(camTrans.eulerAngle.x, 360.0f);
+        camTrans.eulerAngle.x = Mathf.Repeat(camTrans.eulerAngle.x + 360.0f, 360.0f);
+        camTrans.eulerAngle.y = Mathf.Repeat(camTrans.eulerAngle.y + 360.0f, 360.0f);
     }
 }
