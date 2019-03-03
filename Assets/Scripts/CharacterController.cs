@@ -21,7 +21,6 @@ public class CharacterController : MonoBehaviour
     protected Animator                  animator = null;
     protected PlayerCameraController    camControl = null;
     protected Rigidbody                 rigidBody = null;
-
     // Start is called before the first frame update
     void Start()
     {
@@ -51,10 +50,15 @@ public class CharacterController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (moveVec.magnitude > 0.0f)
+        if (inputVelocity.magnitude > 0.0f)
         {
             rigidBody.velocity = new Vector3(inputVelocity.x, rigidBody.velocity.y, inputVelocity.z);
         }
+        else
+        {
+            rigidBody.velocity = new Vector3(0.0f, rigidBody.velocity.y, 0.0f);
+        }
+
         if (rigidBody.velocity.y > 0.0f)
         {
             Debug.Log(rigidBody.velocity.y);
@@ -64,21 +68,33 @@ public class CharacterController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (moveVec.magnitude > 0.0f) {
-            inputVelocity = camControl.camTrans.hRotation * moveVec;
-            this.transform.rotation = Quaternion.LookRotation(inputVelocity);
+        if (inputVelocity.magnitude > 0.0f)
+        {
+            // 今の回転と目標とする回転までを補完
+            this.transform.rotation = Quaternion.Slerp(this.transform.rotation,
+                                                         Quaternion.LookRotation(inputVelocity),
+                                                         rotateSpeed);
         }
     }
 
     void UpdateFromInputController(InputController.InputInfo inputInfo)
     {
         if (!animator) return;
-        if (inputInfo.currentBit.Get(0))
+        if(inputInfo.currentBit.Get(0))
         {
             animator.SetTrigger("Attack");
         }
 
         var inputVec = new Vector3(inputInfo.LStick.x, 0.0f, inputInfo.LStick.y);
         moveVec = inputVec * movementSpeed;
+        animator.SetFloat("inputVec", inputVec.magnitude);
+    }
+
+    public void UpdateMovement(AnimatorStateInfo stateInfo)
+    {
+        if(stateInfo.IsName("Run"))
+        {
+            inputVelocity = camControl.camTrans.hRotation * moveVec;
+        }
     }
 }
